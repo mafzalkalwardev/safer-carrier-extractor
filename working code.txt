@@ -1,0 +1,171 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.edge.service import Service as EdgeService
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+import pandas as pd
+import time
+import os
+import signal
+
+# Define paths
+template_path = "template.csv"
+url = "https://safer.fmcsa.dot.gov/CompanySnapshot.aspx"
+output_csv = "records.csv"
+
+# Load the template CSV to get column headers
+template_df = pd.read_csv(template_path)
+columns = template_df.columns.tolist()
+
+# Ensure the necessary columns are present
+necessary_columns = ["legal name", "address", "telephone", "email"]
+for column in necessary_columns:
+    if column not in columns:
+        columns.append(column)
+
+# Initialize variables
+initial_id = 1380480
+process_interrupted = False
+
+# Signal handler for graceful shutdown
+def signal_handler(sig, frame):
+    global process_interrupted
+    process_interrupted = True
+    print("Process interrupted by user")
+
+# Register signal handler
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+# Initialize Selenium WebDriver (example with EdgeDriver)
+def initialize_driver():
+    return webdriver.Edge(service=EdgeService(EdgeChromiumDriverManager().install()))
+
+driver = initialize_driver()
+
+def validate_data(flattened_data, columns):
+    """Ensure data matches the template structure"""
+    if len(flattened_data) != len(columns):
+        flattened_data.extend([''] * (len(columns) - len(flattened_data)))
+    return flattened_data
+
+def save_to_csv(data, output_csv, columns):
+    """Save data to CSV"""
+    df = pd.DataFrame([data], columns=columns)
+    if not os.path.isfile(output_csv):
+        df.to_csv(output_csv, index=False)
+    else:
+        df.to_csv(output_csv, mode='a', header=False, index=False)
+
+try:
+    while not process_interrupted:
+        try:
+            driver.get(url)
+            
+            # Wait for the page to load and find the form elements
+            WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, "/html/body/form/p/table/tbody/tr[2]/td[2]/input"))
+            )
+            
+            # Click on the element to initialize the form (if needed)
+            driver.find_element(By.XPATH, "/html/body/form/p/table/tbody/tr[2]/td[2]/input").click()
+            
+            # Set value and submit form
+            driver.find_element(By.XPATH, "/html/body/form/p/table/tbody/tr[3]/td/input").send_keys(str(initial_id))
+            driver.find_element(By.XPATH, "/html/body/form/p/table/tbody/tr[4]/td/input").click()
+            
+            # Check if the responding page has the specific element indicating no data
+            if len(driver.find_elements(By.XPATH, "/html/body/table/tbody/tr[2]/td/p/font/b/i")) > 0:
+                initial_id += 1
+                continue
+            
+            # Extract and manipulate table data
+            table_xpath = "/html/body/p/table/tbody/tr[2]/td/table/tbody/tr[2]/td/center[1]/table/tbody"
+            table_element = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, table_xpath))
+            )
+            
+            # Process the table to remove specific rows
+            rows = table_element.find_elements(By.TAG_NAME, "tr")
+            new_rows = []
+            start_removing = False
+            for row in rows:
+                if not start_removing and "Operation Classification:" in row.get_attribute("outerHTML"):
+                    start_removing = True
+                if start_removing:
+                    continue
+                new_rows.append(row)
+            
+            # Extract data from the processed rows
+            data = []
+            for row in new_rows:
+                cols = row.find_elements(By.TAG_NAME, "td")
+                data.append([col.text for col in cols])
+            
+            # Flatten data and validate it
+            if len(data) > 0:
+                flattened_data = [item for sublist in data for item in sublist]
+                validated_data = validate_data(flattened_data, columns)
+                save_to_csv(validated_data, output_csv, columns)
+            
+            # Find and open the specific link in new tab
+            link_xpath = "/html/body/p/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr[3]/td/table/tbody/tr[2]/td/table/tbody/tr[3]/td[2]/font/a"
+            driver.find_element(By.XPATH, link_xpath).click()
+            
+            # Switch to new tab
+            driver.switch_to.window(driver.window_handles[-1])
+            
+            # Click on the element and wait for the target element to load
+            driver.find_element(By.XPATH, "/html/body/div[3]/div[2]/article/div[2]/div[2]/section/a[1]").click()
+            email_container = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.ID, "regBox"))
+            )
+            
+            # Extract all data within the ul with class "col1"
+            ul_element = email_container.find_element(By.CLASS_NAME, "col1")
+            li_elements = ul_element.find_elements(By.TAG_NAME, "li")
+            
+            # Initialize a dictionary to store the extracted data
+            extracted_data = {
+                "legal name": "",
+                "address": "",
+                "telephone": "",
+                "email": ""
+            }
+            
+            for li in li_elements:
+                text = li.text.lower()
+                if "legal name" in text:
+                    extracted_data["legal name"] = li.text.split(":", 1)[-1].strip()
+                elif "address" in text:
+                    extracted_data["address"] = li.text.split(":", 1)[-1].strip()
+                elif "telephone" in text:
+                    extracted_data["telephone"] = li.text.split(":", 1)[-1].strip()
+                elif "email" in text:
+                    extracted_data["email"] = li.text.split(":", 1)[-1].strip()
+            
+            # Add the extracted data to the last row of the CSV file
+            if any(extracted_data.values()):
+                df = pd.read_csv(output_csv)
+                for key, value in extracted_data.items():
+                    df.at[df.index[-1], key] = str(value)
+                df.to_csv(output_csv, index=False)
+            
+            # Navigate back to the main page from the current tab
+            driver.get(url)
+            
+            # Increment initial_id and repeat the process
+            initial_id += 1
+
+        except Exception as e:
+            print(f"Error encountered: {e}")
+            time.sleep(5)  # Wait for a few seconds before retrying
+            driver.get(url)  # Ensure navigation back to the main page
+            initial_id += 1  # Increment initial_id to continue with the next MC number
+
+except KeyboardInterrupt:
+    print("Process interrupted by user")
+
+finally:
+    driver.quit()
