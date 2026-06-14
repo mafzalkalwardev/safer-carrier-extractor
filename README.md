@@ -42,6 +42,10 @@ The extracted data is automatically stored into CSV files for dispatch workflows
 
 \## Screenshots
 
+## Screenshots
+
+![Application screenshot](docs/screenshots/app.png)
+
 ## Features
 
 \- Automated FMCSA SAFER scraping
