@@ -60,7 +60,11 @@ The extracted data is automatically stored into CSV files for dispatch workflows
 
 
 
-\## Features
+\## Screenshots
+
+![safer-carrier-extractor dashboard](docs/screenshots/app.png)
+
+## Features
 
 
 
