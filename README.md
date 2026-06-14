@@ -10,22 +10,11 @@ Documented · MIT licensed · Maintained
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
 
-[Features](#-features) · [Quick Start](#-quick-start) · [Screenshots](#-screenshots) · [Contributing](CONTRIBUTING.md)
-
 </div>
 
 ---
 
-## 🖼 Screenshots
-
-![Safer Carrier Extractor screenshot](docs/screenshots/placeholder.svg)
-
-*Replace `docs/screenshots/placeholder.svg` with real app screenshots.*
-
----
-
 ## 🐍 Contribution graph
-
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mafzalkalwardev/safer-carrier-extractor/output/snake-dark.svg" />
@@ -33,16 +22,11 @@ Documented · MIT licensed · Maintained
   <img alt="Contribution snake" src="https://raw.githubusercontent.com/mafzalkalwardev/safer-carrier-extractor/output/snake.svg" />
 </picture>
 
-
 ---
 
 \# SAFER Carrier Extractor
 
-
-
 A Python Selenium automation tool for extracting carrier data from the FMCSA SAFER database.
-
-
 
 The tool automates MC searches and extracts:
 
@@ -54,19 +38,11 @@ The tool automates MC searches and extracts:
 
 \- emails
 
-
-
 The extracted data is automatically stored into CSV files for dispatch workflows and carrier research.
-
-
 
 \## Screenshots
 
-![safer-carrier-extractor dashboard](docs/screenshots/app.png)
-
 ## Features
-
-
 
 \- Automated FMCSA SAFER scraping
 
@@ -88,11 +64,7 @@ The extracted data is automatically stored into CSV files for dispatch workflows
 
 \- Graceful interruption handling
 
-
-
 \## Tech Stack
-
-
 
 \- Python
 
@@ -104,11 +76,7 @@ The extracted data is automatically stored into CSV files for dispatch workflows
 
 \- CSV Processing
 
-
-
 \## Project Structure
-
-
 
 ```text
 
@@ -126,15 +94,9 @@ safer-carrier-extractor/
 
 ```
 
-
-
 \## Installation
 
-
-
 Install required packages:
-
-
 
 ```bash
 
@@ -142,15 +104,9 @@ pip install selenium pandas webdriver-manager
 
 ```
 
-
-
 \## WebDriver Setup
 
-
-
 Place:
-
-
 
 ```text
 
@@ -158,15 +114,9 @@ msedgedriver.exe
 
 ```
 
-
-
 inside the project folder.
 
-
-
 \## How to Run
-
-
 
 ```bash
 
@@ -174,23 +124,13 @@ python SaferBot.py
 
 ```
 
-
-
 \## Features Overview
-
-
 
 \### Automated Carrier Lookup
 
-
-
 Automatically searches carrier MC numbers from FMCSA SAFER.
 
-
-
 \### Carrier Data Extraction
-
-
 
 Extracts:
 
@@ -202,15 +142,9 @@ Extracts:
 
 \- email
 
-
-
 \### CSV Export
 
-
-
 Automatically saves extracted records into:
-
-
 
 ```text
 
@@ -218,19 +152,11 @@ records.csv
 
 ```
 
-
-
 \### Interruption Support
-
-
 
 Supports safe stopping and continuation.
 
-
-
 \## Use Cases
-
-
 
 \- Dispatch workflows
 
@@ -242,11 +168,7 @@ Supports safe stopping and continuation.
 
 \- Lead generation
 
-
-
 \## Security Note
-
-
 
 Do not upload:
 
@@ -256,17 +178,10 @@ Do not upload:
 
 \- confidential records
 
-
-
 \## Author
 
-
-
 Muhammad Afzal Kalwar
-
-
 
 GitHub:
 
 @mafzalkalwardev
-
